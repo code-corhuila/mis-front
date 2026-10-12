@@ -3,10 +3,27 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MediStock</title><link rel="stylesheet" href="/src/style.css">
 <!--portal-imports-->
-<header><a href="/" class="brand">MediStock</a><span>Inventario de medicamentos</span><button id="logout" hidden>Cerrar sesi&#243;n</button></header>
-<nav id="views" hidden aria-label="Secciones"><button id="catalog-view">Cat&#225;logo</button><button id="suppliers-view">Proveedores</button><button id="inventory-view">Inventario</button><button id="account-view" aria-current="page">Mi cuenta</button></nav>
+<body>
+<aside id="sidebar" class="sidebar" hidden aria-label="Navegacion principal">
+  <a href="/" class="brand sidebar-brand"><img src="/assets/medistock-demo.png" alt="" width="48" height="42"><span><strong>MediStock</strong><small>Gesti&#243;n de medicamentos</small></span></a>
+  <div class="session-identity"><strong id="session-name"></strong><span id="session-roles"></span></div>
+  <nav id="views" hidden aria-label="Secciones">
+    <button id="catalog-view"><img class="nav-icon" src="/assets/pill.svg" alt="">Cat&#225;logo</button>
+    <button id="suppliers-view"><img class="nav-icon" src="/assets/truck.svg" alt="">Proveedores</button>
+    <button id="inventory-view"><img class="nav-icon" src="/assets/boxes.svg" alt="">Inventario</button>
+    <button id="account-view" aria-current="page"><img class="nav-icon" src="/assets/user-round.svg" alt="">Mi cuenta</button>
+  </nav>
+  <div class="sidebar-bottom"><button id="logout" hidden><img class="nav-icon" src="/assets/log-out.svg" alt="">Cerrar sesi&#243;n</button></div>
+</aside>
+<header class="topbar">
+  <a href="/" class="brand">MediStock</a><span id="login-tagline" class="tagline">Inventario de medicamentos</span>
+  <p id="workspace-heading" class="workspace-title" hidden><small>MediStock /</small><span id="workspace-title">Mi cuenta</span></p>
+  <div id="top-identity" class="top-identity" hidden><strong id="top-user"></strong><span id="top-role" class="role-pill"></span><button id="logout-mobile" aria-label="Cerrar sesion">Salir</button></div>
+  <div id="mobile-navigation" class="mobile-switcher" hidden><label for="mobile-view">Secci&#243;n</label><select id="mobile-view"><option value="catalog">Cat&#225;logo</option><option value="suppliers">Proveedores</option><option value="inventory">Inventario</option><option value="account" selected>Mi cuenta</option></select></div>
+</header>
 <main>
   <section id="access" aria-labelledby="title">
+    <img class="login-logo" src="/assets/medistock-demo.png" alt="MediStock" width="240" height="186">
     <p class="eyebrow">ACCESO</p><h1 id="title">Iniciar sesi&#243;n</h1>
     <form id="login">
       <label for="username">Usuario</label><input id="username" name="username" autocomplete="username" maxlength="80" required autofocus>
@@ -17,10 +34,10 @@
   <section id="portal-area" hidden><p id="portal-status" role="status"></p><p id="portal-error" role="alert"></p><button id="portal-retry" hidden>Reintentar</button><div id="portal-host"></div></section>
   <section id="account" hidden aria-labelledby="account-title">
     <p class="eyebrow">CUENTA</p><h1 id="account-title" tabindex="-1">Mi cuenta</h1>
-    <dl><dt>Nombre</dt><dd id="display-name"></dd><dt>Usuario</dt><dd id="account-name"></dd><dt>Roles</dt><dd id="roles"></dd></dl>
+    <dl><div><dt>Nombre</dt><dd id="display-name"></dd></div><div><dt>Usuario</dt><dd id="account-name"></dd></div><div><dt>Roles</dt><dd id="roles"></dd></div></dl>
   </section>
   <p id="status" role="status" aria-live="polite"></p><p id="error" role="alert"></p>
 </main>
-<footer>Medicine Inventory System</footer>
+<footer class="page-footer">Medicine Inventory System</footer>
 <script type="module" src="/src/app.js"></script>
-</html>
+</body></html>
