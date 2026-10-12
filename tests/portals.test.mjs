@@ -4,11 +4,23 @@ import { catalogContext, suppliersContext, inventoryContext } from '../src/porta
 test('portal only gets authenticated catalog reads, never a raw token', async () => {
   const client = { current: () => ({ username: 'fixture' }), request: path => Promise.resolve(path) };
   const context = catalogContext(client, () => true);
-  assert.deepEqual(Object.keys(context), ['request']); assert.ok(Object.isFrozen(context));
+  assert.deepEqual(Object.keys(context), ['canCreate', 'registration', 'request']); assert.equal(context.canCreate, false); assert.ok(Object.isFrozen(context));
   assert.equal(await context.request('/api/v1/medications?page=1&limit=20'), '/api/v1/medications?page=1&limit=20');
   await assert.rejects(context.request('/api/v1/stock'));
   await assert.rejects(context.request('/api/v1/medications?page=1&limit=20', { method: 'POST' }));
   await assert.rejects(catalogContext(client, () => false).request('/api/v1/medications?page=1&limit=20'));
+});
+test('Catalog creation is ADMIN-only, keyed, bounded and revoked with its view', async () => {
+  const options = { method: 'POST', headers: { 'Idempotency-Key': 'synthetic-key' }, body: '{}' };
+  const client = { current: () => ({ roles: ['ADMIN'] }), request: path => Promise.resolve(path) };
+  const pending = { pending: null }, admin = catalogContext(client, () => true, pending);
+  assert.equal(admin.canCreate, true); assert.equal(admin.registration, pending); await admin.request('/api/v1/medications', options);
+  await assert.rejects(admin.request('/api/v1/suppliers', options));
+  await assert.rejects(admin.request('/api/v1/medications', { ...options, method: 'PUT' }));
+  await assert.rejects(admin.request('/api/v1/medications', { ...options, headers: { Authorization: 'forged' } }));
+  await assert.rejects(admin.request('/api/v1/medications', { ...options, body: 'x'.repeat(65537) }));
+  for (const role of ['INVENTORY', 'SUPERVISOR', 'CONSULTATION']) { const reader = catalogContext({ ...client, current: () => ({ roles: [role] }) }, () => true); assert.equal(reader.canCreate, false); await assert.rejects(reader.request('/api/v1/medications', options)); }
+  await assert.rejects(catalogContext(client, () => false).request('/api/v1/medications', options));
 });
 test('inventory capability permits bounded stock/reference reads and role-gated movements, never writes', async () => {
   const client = { current: () => ({ roles: ['CONSULTATION'] }), request: path => Promise.resolve(path) };
