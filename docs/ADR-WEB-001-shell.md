@@ -21,3 +21,12 @@ GATEWAY_ORIGIN is public configuration, never a credential. Default front origin
 http://localhost:5173 matches the existing dev gateway allowlist. Alternate ports
 need their origin explicitly allowed. HTTPS packaging, portal failure isolation,
 integrated reception and QA remain pending.
+
+Reader increment: Catalog is mounted through createApplication/createComponent
+with its own Shadow DOM boundary and teardown. A captured generation revokes
+its request context on navigation/logout; only paginated medication GET reads
+are exposed. Native ESM import maps resolve pinned packages from the sibling
+portal checkout. This is local development composition, not production hosting.
+Mount failures keep account/navigation usable; async stale mounts get independent
+detached hosts so they cannot erase a newer portal. Future portals need their
+own bounded capability context rather than inheriting this read-only scope.

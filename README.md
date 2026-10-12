@@ -14,7 +14,14 @@ The shell verifies login with /api/v1/auth/me and keeps the token only in memory
 Reloading logs out. `GATEWAY_ORIGIN` and `PORT` override public dev configuration;
 the gateway must explicitly allow the chosen front origin. This server binds only
 loopback and is not a production server. See [ADR-WEB-001](docs/ADR-WEB-001-shell.md).
-Portals, reception screens, production deployment and QA are not implemented here.
+The Catalog Angular reader is mounted from the sibling official mis-catalog-portal
+checkout. Run `npm ci --ignore-scripts` in that checkout before starting this
+server. `CATALOG_PORTAL_ROOT` overrides its local path. Runtime packages stay in
+that portal's locked dependency tree; no CDN or token handoff is used.
+Catalog failure leaves the account/navigation available; switching views or
+logging out destroys the mounted application and invalidates its request context.
+Suppliers/Inventory portals, business writes, reception, production and QA remain
+pending. Native ESM/JIT is a development integration, not AOT production packaging.
 
 ## Branching
 

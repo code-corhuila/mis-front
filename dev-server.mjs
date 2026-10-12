@@ -1,17 +1,46 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
+import { resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 const files = new Map([['/', ['index.html', 'text/html']], ['/src/app.js', ['src/app.js', 'text/javascript']], ['/src/client.js', ['src/client.js', 'text/javascript']], ['/src/style.css', ['src/style.css', 'text/css']]]);
 const port = Number(process.env.PORT || 5173);
 const gateway = new URL(process.env.GATEWAY_ORIGIN || 'http://localhost:8088');
 if (!['http:', 'https:'].includes(gateway.protocol) || gateway.username || gateway.password || gateway.pathname !== '/' || gateway.search || gateway.hash) throw Error('Invalid GATEWAY_ORIGIN');
+const catalogRoot = resolve(process.env.CATALOG_PORTAL_ROOT || fileURLToPath(new URL('../mis-catalog-portal/', import.meta.url)));
+const imports = { rxjs: '/vendor/rxjs/dist/esm/index.js', 'rxjs/operators': '/vendor/rxjs/dist/esm/operators/index.js', tslib: '/vendor/tslib/tslib.es6.mjs' };
+let catalogAvailable = false;
+try {
+  for (const name of ['common', 'compiler', 'core', 'platform-browser']) {
+    const pkg = JSON.parse(await readFile(resolve(catalogRoot, 'node_modules/@angular', name, 'package.json'), 'utf8'));
+    if (pkg.version !== '21.2.25') throw Error('Unexpected Angular version');
+    for (const [entry, target] of Object.entries(pkg.exports)) {
+      if (target.default?.startsWith('./fesm2022/')) imports[`@angular/${name}${entry === '.' ? '' : entry.slice(1)}`] = `/vendor/@angular/${name}/${target.default.slice(2)}`;
+    }
+  }
+  await readFile(resolve(catalogRoot, 'src/portal.js')); catalogAvailable = true;
+} catch { console.log('Catalog portal unavailable; install its locked dependencies before mounting.'); }
+files.set('/src/portals.js', ['src/portals.js', 'text/javascript']);
 const server = createServer(async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   if (req.method !== 'GET') { res.writeHead(405); res.end(); return; }
-  if (req.url === '/config.json') { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify({ gateway: gateway.origin })); return; }
+  if (req.url === '/config.json') { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify({ gateway: gateway.origin, catalogAvailable })); return; }
+  if (req.url.startsWith('/vendor/') || req.url.startsWith('/catalog/')) {
+    const relative = req.url.startsWith('/vendor/') ? `node_modules/${req.url.slice(8)}` : req.url.slice(9);
+    const allowed = /^(src\/(portal|model)\.js|node_modules\/@angular\/(common|compiler|core|platform-browser)\/fesm2022\/[a-zA-Z0-9_-]+\.mjs|node_modules\/rxjs\/dist\/esm\/[a-zA-Z0-9_/]+(?:\.js)?|node_modules\/tslib\/tslib\.es6\.mjs)$/.test(relative);
+    const path = resolve(catalogRoot, relative.endsWith('.js') || relative.endsWith('.mjs') ? relative : `${relative}.js`);
+    if (!catalogAvailable || !allowed || !path.startsWith(catalogRoot + sep)) { res.writeHead(404); res.end(); return; }
+    try { res.setHeader('Content-Type', 'text/javascript'); res.end(await readFile(path)); }
+    catch { res.writeHead(404); res.end(); } return;
+  }
   const file = files.get(req.url);
   if (!file) { res.writeHead(404); res.end(); return; }
-  try { res.setHeader('Content-Type', `${file[1]}; charset=utf-8`); res.end(await readFile(new URL(file[0], import.meta.url))); }
+  try {
+    res.setHeader('Content-Type', `${file[1]}; charset=utf-8`);
+    let content = await readFile(new URL(file[0], import.meta.url), 'utf8');
+    if (file[0] === 'index.html') content = content.replace('<!--portal-imports-->', `<script type="importmap">${JSON.stringify({ imports })}</script>`);
+    res.end(content);
+  }
   catch { res.writeHead(500); res.end('Unable to load application'); }
 });
 server.listen(port, '127.0.0.1', () => console.log(`MediStock: http://localhost:${port}`));
