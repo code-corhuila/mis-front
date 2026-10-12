@@ -1,3 +1,16 @@
+import { alertsQuery } from './alerts-model.js';
+export function alertsContext(client, active) {
+  const canAlerts = client.current()?.roles?.some(role => ['ADMIN','INVENTORY','SUPERVISOR'].includes(role)) === true;
+  return Object.freeze({canAlerts, request(path, options = {}) {
+    if (!canAlerts || !active() || !client.current() || Object.keys(options).length) return Promise.reject(Error('Inactive or forbidden alerts read'));
+    try {
+      const url = new URL(path,'http://alerts-context.invalid'), keys = [...url.searchParams.keys()];
+      if (!path.startsWith('/api/v1/alerts/expiry?') || url.origin !== 'http://alerts-context.invalid' || url.pathname !== '/api/v1/alerts/expiry' || url.hash || keys.length !== new Set(keys).size || keys.some(key => !['page','limit','state','severity','lotId'].includes(key)) || url.searchParams.get('limit') !== '20' || !/^(?:[1-9]\d{0,5}|1000000)$/.test(url.searchParams.get('page')) || ['state','severity','lotId'].some(key => url.searchParams.has(key) && !url.searchParams.get(key))) throw Error('Invalid alerts path');
+      alertsQuery(Number(url.searchParams.get('page')),{state:url.searchParams.get('state') || '',severity:url.searchParams.get('severity') || '',lotId:url.searchParams.get('lotId') || ''});
+    } catch { return Promise.reject(Error('Alerts read outside contract')); }
+    return client.request(path);
+  }});
+}
 export function overviewContext(client, active) {
   const canMovements = client.current()?.roles?.some(role => ['ADMIN', 'INVENTORY', 'SUPERVISOR'].includes(role)) === true;
   return Object.freeze({ canMovements, request(path, options = {}) {

@@ -12,6 +12,7 @@
     <button id="catalog-view"><img class="nav-icon" src="/assets/pill.svg" alt="">Cat&#225;logo</button>
     <button id="suppliers-view"><img class="nav-icon" src="/assets/truck.svg" alt="">Proveedores</button>
     <button id="inventory-view"><img class="nav-icon" src="/assets/boxes.svg" alt="">Inventario</button>
+    <button id="alerts-view" hidden><img class="nav-icon" src="/assets/bell.svg" alt="">Alertas</button>
     <button id="account-view" aria-current="page"><img class="nav-icon" src="/assets/user-round.svg" alt="">Mi cuenta</button>
   </nav>
   <div class="sidebar-bottom"><button id="logout" hidden><img class="nav-icon" src="/assets/log-out.svg" alt="">Cerrar sesi&#243;n</button></div>
@@ -20,7 +21,7 @@
   <a href="/" class="brand">MediStock</a><span id="login-tagline" class="tagline">Inventario de medicamentos</span>
   <p id="workspace-heading" class="workspace-title" hidden><small>MediStock /</small><span id="workspace-title">Mi cuenta</span></p>
   <div id="top-identity" class="top-identity" hidden><strong id="top-user"></strong><span id="top-role" class="role-pill"></span><button id="logout-mobile" aria-label="Cerrar sesion">Salir</button></div>
-  <div id="mobile-navigation" class="mobile-switcher" hidden><label for="mobile-view">Secci&#243;n</label><select id="mobile-view"><option value="overview">Resumen</option><option value="catalog">Cat&#225;logo</option><option value="suppliers">Proveedores</option><option value="inventory">Inventario</option><option value="account" selected>Mi cuenta</option></select></div>
+  <div id="mobile-navigation" class="mobile-switcher" hidden><label for="mobile-view">Secci&#243;n</label><select id="mobile-view"><option value="overview">Resumen</option><option value="catalog">Cat&#225;logo</option><option value="suppliers">Proveedores</option><option value="inventory">Inventario</option><option id="alerts-option" value="alerts" hidden disabled>Alertas</option><option value="account" selected>Mi cuenta</option></select></div>
 </header>
 <main>
   <section id="access" aria-labelledby="title">
