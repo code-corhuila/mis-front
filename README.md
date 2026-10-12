@@ -20,8 +20,14 @@ server. `CATALOG_PORTAL_ROOT` overrides its local path. Runtime packages stay in
 that portal's locked dependency tree; no CDN or token handoff is used.
 Catalog failure leaves the account/navigation available; switching views or
 logging out destroys the mounted application and invalidates its request context.
-Suppliers/Inventory portals, business writes, reception, production and QA remain
-pending. Native ESM/JIT is a development integration, not AOT production packaging.
+The Suppliers React portal needs `npm ci --ignore-scripts` and `npm run build`
+in the sibling official mis-suppliers-portal checkout before starting this server.
+SUPPLIERS_PORTAL_ROOT overrides its path; only dist/portal.js is served from it.
+Its context allows supplier listing and ADMIN registration with an idempotency key,
+never token access. Pending registration body/key survives view changes in memory,
+but is cleared on logout/login/reload; backend authorization remains authoritative.
+Inventory, reception, Catalog writes, production deployment and QA remain pending.
+Native Angular ESM/JIT is development integration, not AOT production packaging.
 
 ## Branching
 

@@ -30,3 +30,10 @@ portal checkout. This is local development composition, not production hosting.
 Mount failures keep account/navigation usable; async stale mounts get independent
 detached hosts so they cannot erase a newer portal. Future portals need their
 own bounded capability context rather than inheriting this read-only scope.
+
+Suppliers increment: the React reader/registration bundle has an independent
+Shadow DOM root and teardown. Its session-owned registration store retains only
+the pending body/key through navigation, never a bearer token. This store is
+discarded on login/logout/reload, so process/session recovery is not guaranteed.
+Only paginated Suppliers reads and keyed ADMIN creation are exposed. The shell
+serves the compiled portal file, not Suppliers source, env or node_modules.
