@@ -84,6 +84,22 @@ Partial failures show unavailable, not zero. These independent queries are not
 one atomic cross-domain snapshot. This read-only shell view is not a Worker alert
 inbox and does not enable low-stock flags. See [acceptance](docs/WEB-001-overview-acceptance.md).
 
+## Persisted Expiry Alerts
+
+Alertas is a read-only shell view for human ADMIN/INVENTORY/SUPERVISOR; CONSULTATION
+has no navigation/request capability. Filters state/severity/lotId, 20-row pages,
+refresh and resolved history use only /api/v1/alerts/expiry through Gateway.
+Rows show evaluated physical units and owner evaluation timestamp/window, not live
+stock or browser classification. No evaluation, dismissal, acknowledgement or
+low-stock command is exposed. Responses/filters are validated; denial/outage or
+malformed data clears rows and shows an error, not an empty successful inbox.
+See [acceptance and deployment dependency](docs/WEB-001-expiry-alerts-acceptance.md).
+
+The verification server uses PORT=4200 because 5173 is already occupied; the existing
+Gateway allows both origins. No dev credentials or flags were changed. Login works,
+but active alert GET still returns 404 until Gateway/Inventory deployment alignment.
+Frontend availability does not mean Worker alerts are operational or the HU closed.
+
 ## Branching Policy
 
 Three permanent branches. **None of them accepts a direct commit** — you enter through a child

@@ -9,3 +9,5 @@ from the existing pinned lucide-react 1.55.0 package used by the Suppliers porta
 They are not manually drawn and require no runtime dependency in the shell.
 LUCIDE-LICENSE preserves the upstream ISC/Feather MIT notices.
 The development server exposes exact asset paths, never the demo HTML or arbitrary files.
+Bell, RefreshCw and the two pagination chevrons are static lucide-static 1.55.0 SVG
+assets from its npm package, preserving the upstream paths and license notices.
