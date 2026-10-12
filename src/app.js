@@ -1,11 +1,11 @@
 import { createClient } from './client.js';
-import { catalogContext, suppliersContext } from './portals.js';
+import { catalogContext, suppliersContext, inventoryContext } from './portals.js';
 const $ = id => document.getElementById(id);
 const roleNames = { ADMIN: 'Administrador', INVENTORY: 'Inventario', SUPERVISOR: 'Supervisor', CONSULTATION: 'Consulta' };
 let client;
 let cleanup, portalGeneration = 0, selectedPortal = 'catalog', suppliersRegistration = { pending: null };
-const portalDefinitions = { catalog: { url: '/catalog/src/portal.js', label: 'catalogo' }, suppliers: { url: '/suppliers/portal.js', label: 'proveedores' } };
-function markView(name) { for (const view of ['account', 'catalog', 'suppliers']) { if (view === name) $(`${view}-view`).setAttribute('aria-current', 'page'); else $(`${view}-view`).removeAttribute('aria-current'); } }
+const portalDefinitions = { catalog: { url: '/catalog/src/portal.js', label: 'catalogo' }, suppliers: { url: '/suppliers/portal.js', label: 'proveedores' }, inventory: { url: '/inventory/src/portal.js', label: 'inventario' } };
+function markView(name) { for (const view of ['account', 'catalog', 'suppliers', 'inventory']) { if (view === name) $(`${view}-view`).setAttribute('aria-current', 'page'); else $(`${view}-view`).removeAttribute('aria-current'); } }
 function removePortal() { portalGeneration++; cleanup?.(); cleanup = null; $('portal-host').replaceChildren(); $('portal-area').hidden = true; document.querySelector('main').classList.remove('wide'); }
 function showAccount() { removePortal(); $('account').hidden = false; markView('account'); }
 async function showPortal(name = selectedPortal) {
@@ -20,7 +20,7 @@ async function showPortal(name = selectedPortal) {
     if (version !== portalGeneration || !client.current()) return;
     const host = document.createElement('div'); $('portal-host').append(host);
     const active = () => version === portalGeneration;
-    const context = name === 'catalog' ? catalogContext(client, active) : suppliersContext(client, active, suppliersRegistration);
+    const context = name === 'catalog' ? catalogContext(client, active) : name === 'inventory' ? inventoryContext(client, active) : suppliersContext(client, active, suppliersRegistration);
     const destroy = await portal.mount(host, context);
     if (version !== portalGeneration || !client.current()) { destroy(); return; }
     cleanup = destroy;
@@ -67,6 +67,7 @@ $('logout').addEventListener('click', () => { client.logout(); $('error').textCo
 $('account-view').addEventListener('click', showAccount);
 $('catalog-view').addEventListener('click', () => showPortal('catalog'));
 $('suppliers-view').addEventListener('click', () => showPortal('suppliers'));
+$('inventory-view').addEventListener('click', () => showPortal('inventory'));
 $('portal-retry').addEventListener('click', () => showPortal());
 setInterval(() => { if (client) client.current(); }, 1000);
 document.addEventListener('visibilitychange', () => { if (client) client.current(); });

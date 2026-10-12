@@ -8,18 +8,23 @@ const gateway = new URL(process.env.GATEWAY_ORIGIN || 'http://localhost:8088');
 if (!['http:', 'https:'].includes(gateway.protocol) || gateway.username || gateway.password || gateway.pathname !== '/' || gateway.search || gateway.hash) throw Error('Invalid GATEWAY_ORIGIN');
 const catalogRoot = resolve(process.env.CATALOG_PORTAL_ROOT || fileURLToPath(new URL('../mis-catalog-portal/', import.meta.url)));
 const suppliersRoot = resolve(process.env.SUPPLIERS_PORTAL_ROOT || fileURLToPath(new URL('../mis-suppliers-portal/', import.meta.url)));
+const inventoryRoot = resolve(process.env.INVENTORY_PORTAL_ROOT || fileURLToPath(new URL('../mis-inventory-portal/', import.meta.url)));
+let angularRoot = catalogRoot;
+try { await readFile(resolve(angularRoot, 'node_modules/@angular/core/package.json')); }
+catch { angularRoot = inventoryRoot; }
 const imports = { rxjs: '/vendor/rxjs/dist/esm/index.js', 'rxjs/operators': '/vendor/rxjs/dist/esm/operators/index.js', tslib: '/vendor/tslib/tslib.es6.mjs' };
-let catalogAvailable = false;
+let catalogAvailable = false, angularAvailable = false;
 try {
   for (const name of ['common', 'compiler', 'core', 'platform-browser']) {
-    const pkg = JSON.parse(await readFile(resolve(catalogRoot, 'node_modules/@angular', name, 'package.json'), 'utf8'));
+    const pkg = JSON.parse(await readFile(resolve(angularRoot, 'node_modules/@angular', name, 'package.json'), 'utf8'));
     if (pkg.version !== '21.2.25') throw Error('Unexpected Angular version');
     for (const [entry, target] of Object.entries(pkg.exports)) {
       if (target.default?.startsWith('./fesm2022/')) imports[`@angular/${name}${entry === '.' ? '' : entry.slice(1)}`] = `/vendor/@angular/${name}/${target.default.slice(2)}`;
     }
   }
-  await readFile(resolve(catalogRoot, 'src/portal.js')); catalogAvailable = true;
-} catch { console.log('Catalog portal unavailable; install its locked dependencies before mounting.'); }
+  angularAvailable = true;
+} catch { console.log('Angular runtime unavailable; install the locked Catalog or Inventory dependencies.'); }
+try { await readFile(resolve(catalogRoot, 'src/portal.js')); catalogAvailable = angularAvailable; } catch {}
 files.set('/src/portals.js', ['src/portals.js', 'text/javascript']);
 const server = createServer(async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
@@ -30,11 +35,13 @@ const server = createServer(async (req, res) => {
     try { res.setHeader('Content-Type', 'text/javascript'); res.end(await readFile(resolve(suppliersRoot, 'dist/portal.js'))); }
     catch { res.writeHead(404); res.end(); } return;
   }
-  if (req.url.startsWith('/vendor/') || req.url.startsWith('/catalog/')) {
-    const relative = req.url.startsWith('/vendor/') ? `node_modules/${req.url.slice(8)}` : req.url.slice(9);
-    const allowed = /^(src\/(portal|model)\.js|node_modules\/@angular\/(common|compiler|core|platform-browser)\/fesm2022\/[a-zA-Z0-9_-]+\.mjs|node_modules\/rxjs\/dist\/esm\/[a-zA-Z0-9_/]+(?:\.js)?|node_modules\/tslib\/tslib\.es6\.mjs)$/.test(relative);
-    const path = resolve(catalogRoot, relative.endsWith('.js') || relative.endsWith('.mjs') ? relative : `${relative}.js`);
-    if (!catalogAvailable || !allowed || !path.startsWith(catalogRoot + sep)) { res.writeHead(404); res.end(); return; }
+  if (req.url.startsWith('/vendor/') || req.url.startsWith('/catalog/') || req.url.startsWith('/inventory/')) {
+    const vendor = req.url.startsWith('/vendor/'), inventory = req.url.startsWith('/inventory/');
+    const root = vendor ? angularRoot : inventory ? inventoryRoot : catalogRoot;
+    const relative = vendor ? `node_modules/${req.url.slice(8)}` : req.url.slice(inventory ? 11 : 9);
+    const allowed = /^(src\/(portal|model|styles)\.js|node_modules\/@angular\/(common|compiler|core|platform-browser)\/fesm2022\/[a-zA-Z0-9_-]+\.mjs|node_modules\/rxjs\/dist\/esm\/[a-zA-Z0-9_/]+(?:\.js)?|node_modules\/tslib\/tslib\.es6\.mjs)$/.test(relative);
+    const path = resolve(root, relative.endsWith('.js') || relative.endsWith('.mjs') ? relative : `${relative}.js`);
+    if (!angularAvailable || !allowed || !path.startsWith(root + sep)) { res.writeHead(404); res.end(); return; }
     try { res.setHeader('Content-Type', 'text/javascript'); res.end(await readFile(path)); }
     catch { res.writeHead(404); res.end(); } return;
   }

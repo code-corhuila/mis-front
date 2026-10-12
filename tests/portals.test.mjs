@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { catalogContext, suppliersContext } from '../src/portals.js';
+import { catalogContext, suppliersContext, inventoryContext } from '../src/portals.js';
 test('portal only gets authenticated catalog reads, never a raw token', async () => {
   const client = { current: () => ({ username: 'fixture' }), request: path => Promise.resolve(path) };
   const context = catalogContext(client, () => true);
@@ -9,6 +9,20 @@ test('portal only gets authenticated catalog reads, never a raw token', async ()
   await assert.rejects(context.request('/api/v1/stock'));
   await assert.rejects(context.request('/api/v1/medications?page=1&limit=20', { method: 'POST' }));
   await assert.rejects(catalogContext(client, () => false).request('/api/v1/medications?page=1&limit=20'));
+});
+test('inventory capability permits bounded stock/reference reads and role-gated movements, never writes', async () => {
+  const client = { current: () => ({ roles: ['CONSULTATION'] }), request: path => Promise.resolve(path) };
+  const reader = inventoryContext(client, () => true);
+  assert.equal(reader.canMovements, false);
+  await reader.request('/api/v1/stock?page=1&limit=20&expired=true');
+  await reader.request('/api/v1/medications?page=1&limit=100');
+  await assert.rejects(reader.request('/api/v1/movements?page=1&limit=20'));
+  await assert.rejects(reader.request('/api/v1/stock?page=1&limit=20', { method: 'POST' }));
+  await assert.rejects(reader.request('/api/v1/stock?page=1&page=2&limit=20'));
+  await assert.rejects(reader.request('/api/v1/stock?page=1&limit=100'));
+  const admin = inventoryContext({ ...client, current: () => ({ roles: ['ADMIN'] }) }, () => true);
+  assert.equal(admin.canMovements, true); await admin.request('/api/v1/movements?page=1&limit=20&from=2026-10-01');
+  await assert.rejects(inventoryContext(client, () => false).request('/api/v1/stock?page=1&limit=20'));
 });
 test('suppliers context enforces path/role and keeps registration only within the provided session store', async () => {
   const registration = { pending: null }, calls = [];
