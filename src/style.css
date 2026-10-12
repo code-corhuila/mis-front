@@ -27,3 +27,4 @@ main.wide { width: min(100% - 40px, 1160px); margin-top: 36px; }
 #views button[aria-current] { color: #0d655b; border-color: #0d655b; }
 #portal-retry { width: auto; }
 @media (max-width: 480px) { header { padding: 16px 20px; gap: 10px; } header span { width: 100%; } main { margin-top: 44px; } }
+@media (max-width: 480px) { #views { padding: 0 20px; gap: 16px; } }

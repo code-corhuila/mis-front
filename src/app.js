@@ -1,34 +1,40 @@
 import { createClient } from './client.js';
-import { catalogContext } from './portals.js';
+import { catalogContext, suppliersContext } from './portals.js';
 const $ = id => document.getElementById(id);
 const roleNames = { ADMIN: 'Administrador', INVENTORY: 'Inventario', SUPERVISOR: 'Supervisor', CONSULTATION: 'Consulta' };
 let client;
-let cleanup, portalGeneration = 0;
+let cleanup, portalGeneration = 0, selectedPortal = 'catalog', suppliersRegistration = { pending: null };
+const portalDefinitions = { catalog: { url: '/catalog/src/portal.js', label: 'catalogo' }, suppliers: { url: '/suppliers/portal.js', label: 'proveedores' } };
+function markView(name) { for (const view of ['account', 'catalog', 'suppliers']) { if (view === name) $(`${view}-view`).setAttribute('aria-current', 'page'); else $(`${view}-view`).removeAttribute('aria-current'); } }
 function removePortal() { portalGeneration++; cleanup?.(); cleanup = null; $('portal-host').replaceChildren(); $('portal-area').hidden = true; document.querySelector('main').classList.remove('wide'); }
-function showAccount() { removePortal(); $('account').hidden = false; $('account-view').setAttribute('aria-current', 'page'); $('catalog-view').removeAttribute('aria-current'); }
-async function showCatalog() {
+function showAccount() { removePortal(); $('account').hidden = false; markView('account'); }
+async function showPortal(name = selectedPortal) {
   if (!client.current()) return;
+  selectedPortal = name; const definition = portalDefinitions[name];
   removePortal(); const version = portalGeneration;
   $('account').hidden = true; $('portal-area').hidden = false; document.querySelector('main').classList.add('wide');
-  $('catalog-view').setAttribute('aria-current', 'page'); $('account-view').removeAttribute('aria-current');
-  $('portal-status').textContent = 'Cargando catalogo...'; $('portal-error').textContent = ''; $('portal-retry').hidden = true;
+  markView(name);
+  $('portal-status').textContent = `Cargando ${definition.label}...`; $('portal-error').textContent = ''; $('portal-retry').hidden = true;
   try {
-    const portal = await import('/catalog/src/portal.js');
+    const portal = await import(definition.url);
     if (version !== portalGeneration || !client.current()) return;
     const host = document.createElement('div'); $('portal-host').append(host);
-    const destroy = await portal.mount(host, catalogContext(client, () => version === portalGeneration));
+    const active = () => version === portalGeneration;
+    const context = name === 'catalog' ? catalogContext(client, active) : suppliersContext(client, active, suppliersRegistration);
+    const destroy = await portal.mount(host, context);
     if (version !== portalGeneration || !client.current()) { destroy(); return; }
     cleanup = destroy;
-  } catch { if (version === portalGeneration) { $('portal-error').textContent = 'No fue posible abrir el catalogo.'; $('portal-retry').hidden = false; } }
+  } catch { if (version === portalGeneration) { $('portal-error').textContent = `No fue posible abrir ${definition.label}.`; $('portal-retry').hidden = false; } }
   finally { if (version === portalGeneration) $('portal-status').textContent = ''; }
 }
 function render(user) {
+  suppliersRegistration = { pending: null };
   removePortal(); $('views').hidden = !user;
   $('access').hidden = !!user; $('account').hidden = !user; $('logout').hidden = !user;
   $('display-name').textContent = user?.displayName || '';
   $('account-name').textContent = user?.username || '';
   $('roles').textContent = user?.roles.map(role => roleNames[role] || role).join(', ') || '';
-  $('account-view').setAttribute('aria-current', 'page'); $('catalog-view').removeAttribute('aria-current');
+  markView('account');
   if (!user) $('password').value = '';
 }
 function message(error) {
@@ -59,7 +65,8 @@ $('login').addEventListener('submit', async event => {
 });
 $('logout').addEventListener('click', () => { client.logout(); $('error').textContent = ''; $('username').focus(); });
 $('account-view').addEventListener('click', showAccount);
-$('catalog-view').addEventListener('click', showCatalog);
-$('portal-retry').addEventListener('click', showCatalog);
+$('catalog-view').addEventListener('click', () => showPortal('catalog'));
+$('suppliers-view').addEventListener('click', () => showPortal('suppliers'));
+$('portal-retry').addEventListener('click', () => showPortal());
 setInterval(() => { if (client) client.current(); }, 1000);
 document.addEventListener('visibilitychange', () => { if (client) client.current(); });
