@@ -1,8 +1,12 @@
-export function catalogContext(client, active, registration = { pending: null }) {
+export function catalogContext(client, active, registration = { pending: null }, maintenance = { pending: null }) {
   const canCreate = client.current()?.roles?.includes('ADMIN') === true;
-  return Object.freeze({ canCreate, registration, request(path, options = {}) {
+  return Object.freeze({ canCreate, registration, maintenance, request(path, options = {}) {
     if (!active() || !client.current()) return Promise.reject(Error('Inactive portal'));
     const read = /^\/api\/v1\/medications\?page=[1-9]\d*&limit=(?:[1-9]\d?|100)$/.test(path) && Object.keys(options).length === 0;
+    const resource = /^\/api\/v1\/medications\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\/deactivate)?$/.test(path);
+    const versionedRead = canCreate && resource && !path.endsWith('/deactivate') && Object.keys(options).length === 0;
+    const conditional = canCreate && resource && typeof options.body === 'string' && options.body.length <= 65536 && Object.keys(options).sort().join() === 'body,headers,method' && Object.keys(options.headers || {}).join() === 'If-Match' && /^"(0|[1-9][0-9]{0,18})"$/.test(options.headers['If-Match']) && (path.endsWith('/deactivate') ? options.method === 'POST' && options.body === '{}' : options.method === 'PUT');
+    if (versionedRead || conditional) return client.requestVersioned(path, options);
     const write = canCreate && path === '/api/v1/medications' && options.method === 'POST' && typeof options.body === 'string' && options.body.length <= 65536 && Object.keys(options).sort().join() === 'body,headers,method' && Object.keys(options.headers || {}).join() === 'Idempotency-Key' && /^[A-Za-z0-9._:-]{8,128}$/.test(options.headers['Idempotency-Key']);
     if (!read && !write) return Promise.reject(Error('Catalog request outside contract'));
     return client.request(path, options);

@@ -10,7 +10,7 @@ export function createClient(origin, { fetcher = fetch, now = Date.now, changed 
     if (session && now() >= session.expiresAt) logout();
     return session?.user ?? null;
   };
-  async function send(path, options = {}, token) {
+  async function send(path, options = {}, token, versioned = false) {
     if (!/^\/api\/v1\/[a-zA-Z0-9/?=&._%-]+$/.test(path)) throw Error('Invalid API path');
     const url = new URL(path, base);
     if (!url.pathname.startsWith('/api/v1/')) throw Error('Invalid API path');
@@ -22,13 +22,13 @@ export function createClient(origin, { fetcher = fetch, now = Date.now, changed 
     const data = await response.json().catch(() => null);
     if (!response.ok) throw new ApiError(response.status, data?.error || 'INVALID_RESPONSE', response.headers.get('X-Correlation-Id'));
     if (!data) throw new ApiError(502, 'INVALID_RESPONSE');
-    return data;
+    return versioned ? { data, etag: response.headers.get('ETag') } : data;
   }
-  async function request(path, options) {
+  async function request(path, options, versioned = false) {
     if (!current()) throw new ApiError(401, 'UNAUTHORIZED');
     const token = session.token, version = generation;
     try {
-      const data = await send(path, options, token);
+      const data = await send(path, options, token, versioned);
       if (version !== generation || !current()) throw new ApiError(401, 'UNAUTHORIZED');
       return data;
     } catch (error) { if (error.status === 401 && version === generation) logout(); throw error; }
@@ -45,5 +45,5 @@ export function createClient(origin, { fetcher = fetch, now = Date.now, changed 
     changed(user);
     return user;
   }
-  return Object.freeze({ login, logout, current, request });
+  return Object.freeze({ login, logout, current, request, requestVersioned: (path, options) => request(path, options, true) });
 }
