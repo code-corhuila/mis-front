@@ -37,3 +37,9 @@ the pending body/key through navigation, never a bearer token. This store is
 discarded on login/logout/reload, so process/session recovery is not guaranteed.
 Only paginated Suppliers reads and keyed ADMIN creation are exposed. The shell
 serves the compiled portal file, not Suppliers source, env or node_modules.
+
+Inventory reader increment: use the same pinned Angular runtime as Catalog through
+the shell import map, rather than loading a second Angular core. If Catalog's
+runtime is absent, select the installed Inventory runtime. The Inventory context
+permits bounded stock reads, role-gated movements and two descriptive API reads;
+it does not expose stock writes or raw tokens. Owners still enforce authorization.
