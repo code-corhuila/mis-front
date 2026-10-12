@@ -50,3 +50,11 @@ ADMIN/INVENTORY/SUPERVISOR lookup; it exposes neither compensation nor direct
 receipt/entry writes. Pending/replay body/key is immutable, and resume is an explicit
 separate command. Completed/compensated may start a new intention; FAILED/unknown
 cannot be silently discarded. Session persistence and compensation UI remain absent.
+
+Exit increment: Inventory receives a separate session-owned intention store and
+an explicit ADMIN/INVENTORY capability for POST /api/v1/exits only. The capability
+requires a bounded body and Idempotency-Key, rejects extra headers/options and
+remains revoked on navigation/logout. It exposes neither direct entries nor tokens.
+The store keeps an uncertain immutable body/key across view remounts, not across
+logout/reload. Only an acknowledged owner result triggers stock refresh; there is
+no optimistic debit or automatic retry. Owner authorization is still authoritative.
