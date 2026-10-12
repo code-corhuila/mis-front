@@ -69,8 +69,20 @@ capabilities/teardown; authentication and pending-write semantics remain unchang
 The reference PNG is reused unchanged; static Lucide icons retain their licenses.
 No demo credentials, fake metrics, reports, user management or injected scripts
 are copied. This is not a pixel-identical mockup or complete WEB-001 implementation.
-Portal-internal styling, real summary/alert screens, production packaging and QA
-remain subsequent work. See [acceptance](docs/WEB-001-demo-shell-acceptance.md).
+Portal-internal styling is aligned in paired portal PRs. Worker-backed alerts,
+production packaging and QA remain subsequent work.
+See [shell acceptance](docs/WEB-001-demo-shell-acceptance.md).
+
+## Real overview increment
+
+Login now opens Resumen: independent owner metadata counts for medications,
+suppliers and lots, a paginated expired-lot read, and the latest five confirmed
+movements for ADMIN/INVENTORY/SUPERVISOR only. CONSULTATION does not request them.
+Counts include inactive/zero-stock records as labeled. No heterogeneous units are
+summed; expired status comes from Inventory, not a browser approximation.
+Partial failures show unavailable, not zero. These independent queries are not
+one atomic cross-domain snapshot. This read-only shell view is not a Worker alert
+inbox and does not enable low-stock flags. See [acceptance](docs/WEB-001-overview-acceptance.md).
 
 ## Branching Policy
 

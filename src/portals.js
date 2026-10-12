@@ -1,3 +1,14 @@
+export function overviewContext(client, active) {
+  const canMovements = client.current()?.roles?.some(role => ['ADMIN', 'INVENTORY', 'SUPERVISOR'].includes(role)) === true;
+  return Object.freeze({ canMovements, request(path, options = {}) {
+    if (!active() || !client.current()) return Promise.reject(Error('Inactive overview'));
+    const count = ['/api/v1/medications?page=1&limit=1', '/api/v1/suppliers?page=1&limit=1', '/api/v1/stock?page=1&limit=1'].includes(path);
+    const expired = /^\/api\/v1\/stock\?page=(?:[1-9]\d{0,5}|1000000)&limit=20&expired=true$/.test(path);
+    const movements = canMovements && path === '/api/v1/movements?page=1&limit=5';
+    if (Object.keys(options).length || (!count && !expired && !movements)) return Promise.reject(Error('Overview read outside contract'));
+    return client.request(path);
+  } });
+}
 export function catalogContext(client, active, registration = { pending: null }, maintenance = { pending: null }) {
   const canCreate = client.current()?.roles?.includes('ADMIN') === true;
   return Object.freeze({ canCreate, registration, maintenance, request(path, options = {}) {
