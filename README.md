@@ -26,7 +26,7 @@ SUPPLIERS_PORTAL_ROOT overrides its path; only dist/portal.js is served from it.
 Its context allows supplier listing and ADMIN registration with an idempotency key,
 never token access. Pending registration body/key survives view changes in memory,
 but is cleared on logout/login/reload; backend authorization remains authoritative.
-Catalog editing/deactivation, production deployment and QA remain pending.
+Production deployment and QA remain pending.
 Native Angular ESM/JIT is development integration, not AOT production packaging.
 
 Inventory now mounts the official sibling mis-inventory-portal reader; run its
@@ -36,14 +36,14 @@ CONSULTATION cannot request movements. Angular runtime modules are shared from
 Catalog, with Inventory's locked runtime as fallback when Catalog is not installed.
 The server serves only allowed source/runtime files, never arbitrary checkout files.
 An explicit ADMIN/INVENTORY capability also permits keyed POST /api/v1/exits.
-Catalog editing/deactivation, production packaging and QA still remain.
+Production packaging and QA still remain.
 
 The paired Suppliers reception increment adds ADMIN/INVENTORY start/resume and
 ADMIN/INVENTORY/SUPERVISOR saga lookup, with a separate session-owned pending
 body/key/result store. The scope denies compensation and arbitrary Workflow paths.
 Reception uses real Workflow, not frontend orchestration or direct participant writes.
 Unknown starts retain their original intent; logout/reload discards local memory.
-Single-lot reception and stock exits are now available. Catalog editing/deactivation,
+Single-lot reception, stock exits and Catalog maintenance are now available;
 visual adaptation to the mockup, production packaging and QA still remain.
 Exit intent uses a separate session-owned body/key/result store; navigation retains
 it, while logout/login/reload clears it. No optimistic debit or automatic retry
@@ -53,6 +53,12 @@ pending body/key/result store. Other roles keep read-only access; arbitrary writ
 extra headers and stale views are denied. Creation survives navigation, not logout
 or reload. Catalog enforces code uniqueness and permissions; no database access or
 token handoff is introduced. The portal's creation acceptance is operator-run.
+Catalog maintenance adds ADMIN-only versioned resource GET, conditional PUT and
+confirmed deactivate POST. Only data/ETag is returned, not arbitrary headers or
+tokens. Pending body/version survives view changes, not login/logout/reload.
+412 requires explicit state review; the shell never retries with a fresh version.
+The existing gateway already exposes ETag and permits If-Match. Both paired PRs
+must be applied before using the new maintenance screen.
 
 ## Branching
 

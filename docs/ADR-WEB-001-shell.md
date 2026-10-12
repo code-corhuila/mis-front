@@ -66,3 +66,12 @@ Requests reject extra options/headers and are revoked with the captured view.
 Only a validated acknowledgement refreshes owner listing; the UI never inserts an
 optimistic record. PUT and deactivation are still absent: future maintenance must
 carry the owner's If-Match version and explicitly handle conflicts.
+
+Maintenance increment: the client adds a versioned response method returning only
+data/ETag, keeping the ordinary JSON contract unchanged. Catalog's ADMIN context
+permits exact UUID reads, PUT with If-Match and deactivate POST with empty body;
+extra headers/options and stale contexts are rejected. A distinct session-owned
+store retains an uncertain command's body/version through view remounts. A 412
+never adopts a fresh ETag automatically: explicit review reads current state and
+discards the old draft before a new command. This cannot attribute a concurrent
+change to the previous request. Backend row/version checks remain authoritative.

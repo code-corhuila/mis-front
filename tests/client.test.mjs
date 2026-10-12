@@ -52,3 +52,14 @@ test('rejects external paths and malformed authentication response', async () =>
   await assert.rejects(client.login('demo', 'fixture'), error => error.status === 502);
   assert.throws(() => createClient('http://user:password@localhost:8088'));
 });
+test('versioned responses expose only data and ETag; ordinary reads retain their contract', async () => {
+  let calls = 0;
+  const client = createClient('http://localhost:8088', { fetcher: async () => ++calls <= 2 ? json(calls === 1 ? auth : user) : new Response('{"id":"fixture"}', { headers: { ETag: '"7"', 'X-Private': 'not-exposed' } }) });
+  await client.login('demo', 'fixture'); assert.deepEqual(await client.requestVersioned('/api/v1/medications/fixture'), { data: { id: 'fixture' }, etag: '"7"' });
+  assert.deepEqual(await client.request('/api/v1/medications/fixture'), { id: 'fixture' });
+});
+test('versioned requests cannot publish after logout', async () => {
+  let calls = 0, resolve; const wait = new Promise(done => { resolve = done; });
+  const client = createClient('http://localhost:8088', { fetcher: async () => ++calls <= 2 ? json(calls === 1 ? auth : user) : wait });
+  await client.login('demo', 'fixture'); const request = client.requestVersioned('/api/v1/medications/fixture'); client.logout(); resolve(json({ id: 'fixture' })); await assert.rejects(request, error => error.status === 401);
+});

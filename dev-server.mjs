@@ -39,7 +39,7 @@ const server = createServer(async (req, res) => {
     const vendor = req.url.startsWith('/vendor/'), inventory = req.url.startsWith('/inventory/');
     const root = vendor ? angularRoot : inventory ? inventoryRoot : catalogRoot;
     const relative = vendor ? `node_modules/${req.url.slice(8)}` : req.url.slice(inventory ? 11 : 9);
-    const allowed = /^(src\/(portal|model|styles|exit-model|create-model)\.js|node_modules\/@angular\/(common|compiler|core|platform-browser)\/fesm2022\/[a-zA-Z0-9_-]+\.mjs|node_modules\/rxjs\/dist\/esm\/[a-zA-Z0-9_/]+(?:\.js)?|node_modules\/tslib\/tslib\.es6\.mjs)$/.test(relative);
+    const allowed = /^(src\/(portal|model|styles|exit-model|create-model|maintenance-model)\.js|node_modules\/@angular\/(common|compiler|core|platform-browser)\/fesm2022\/[a-zA-Z0-9_-]+\.mjs|node_modules\/rxjs\/dist\/esm\/[a-zA-Z0-9_/]+(?:\.js)?|node_modules\/tslib\/tslib\.es6\.mjs)$/.test(relative);
     const path = resolve(root, relative.endsWith('.js') || relative.endsWith('.mjs') ? relative : `${relative}.js`);
     if (!angularAvailable || !allowed || !path.startsWith(root + sep)) { res.writeHead(404); res.end(); return; }
     try { res.setHeader('Content-Type', 'text/javascript'); res.end(await readFile(path)); }
