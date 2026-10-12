@@ -5,7 +5,11 @@ const roleNames = { ADMIN: 'Administrador', INVENTORY: 'Inventario', SUPERVISOR:
 let client;
 let cleanup, portalGeneration = 0, selectedPortal = 'catalog', suppliersRegistration = { pending: null }, reception = { pending: null }, exits = { pending: null }, medicationRegistration = { pending: null }, medicationMaintenance = { pending: null };
 const portalDefinitions = { catalog: { url: '/catalog/src/portal.js', label: 'catalogo' }, suppliers: { url: '/suppliers/portal.js', label: 'proveedores' }, inventory: { url: '/inventory/src/portal.js', label: 'inventario' } };
-function markView(name) { for (const view of ['account', 'catalog', 'suppliers', 'inventory']) { if (view === name) $(`${view}-view`).setAttribute('aria-current', 'page'); else $(`${view}-view`).removeAttribute('aria-current'); } }
+function markView(name) {
+  for (const view of ['account', 'catalog', 'suppliers', 'inventory']) { if (view === name) $(`${view}-view`).setAttribute('aria-current', 'page'); else $(`${view}-view`).removeAttribute('aria-current'); }
+  $('mobile-view').value = name;
+  $('workspace-title').textContent = $(`${name}-view`).textContent.trim();
+}
 function removePortal() { portalGeneration++; cleanup?.(); cleanup = null; $('portal-host').replaceChildren(); $('portal-area').hidden = true; document.querySelector('main').classList.remove('wide'); }
 function showAccount() { removePortal(); $('account').hidden = false; markView('account'); }
 async function showPortal(name = selectedPortal) {
@@ -34,10 +38,15 @@ function render(user) {
   medicationRegistration = { pending: null };
   medicationMaintenance = { pending: null };
   removePortal(); $('views').hidden = !user;
+  document.body.classList.toggle('authenticated', !!user);
+  for (const id of ['sidebar', 'workspace-heading', 'top-identity', 'mobile-navigation']) $(id).hidden = !user;
+  $('login-tagline').hidden = !!user;
   $('access').hidden = !!user; $('account').hidden = !user; $('logout').hidden = !user;
   $('display-name').textContent = user?.displayName || '';
   $('account-name').textContent = user?.username || '';
   $('roles').textContent = user?.roles.map(role => roleNames[role] || role).join(', ') || '';
+  $('session-name').textContent = $('top-user').textContent = user?.displayName || '';
+  $('session-roles').textContent = $('top-role').textContent = $('roles').textContent;
   markView('account');
   if (!user) $('password').value = '';
 }
@@ -68,6 +77,8 @@ $('login').addEventListener('submit', async event => {
   finally { $('password').value = ''; $('status').textContent = ''; $('submit').disabled = false; }
 });
 $('logout').addEventListener('click', () => { client.logout(); $('error').textContent = ''; $('username').focus(); });
+$('logout-mobile').addEventListener('click', () => $('logout').click());
+$('mobile-view').addEventListener('change', event => { const name = event.target.value; if (name === 'account') showAccount(); else if (Object.hasOwn(portalDefinitions, name)) showPortal(name); });
 $('account-view').addEventListener('click', showAccount);
 $('catalog-view').addEventListener('click', () => showPortal('catalog'));
 $('suppliers-view').addEventListener('click', () => showPortal('suppliers'));
