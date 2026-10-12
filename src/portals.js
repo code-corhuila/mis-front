@@ -23,10 +23,12 @@ export function suppliersContext(client, active, registration, reception = { pen
     return client.request(path, options);
   } });
 }
-export function inventoryContext(client, active) {
+export function inventoryContext(client, active, exits = { pending: null }) {
   const canMovements = client.current()?.roles.some(role => ['ADMIN', 'INVENTORY', 'SUPERVISOR'].includes(role)) === true;
-  return Object.freeze({ canMovements, request(path, options = {}) {
+  const canExit = client.current()?.roles.some(role => ['ADMIN', 'INVENTORY'].includes(role)) === true;
+  return Object.freeze({ canMovements, canExit, exits, request(path, options = {}) {
     if (!active() || !client.current()) return Promise.reject(Error('Inactive portal'));
+    if (path === '/api/v1/exits' && canExit && options.method === 'POST' && typeof options.body === 'string' && options.body.length <= 65536 && Object.keys(options).sort().join() === 'body,headers,method' && Object.keys(options.headers || {}).join() === 'Idempotency-Key' && /^[A-Za-z0-9._:-]{8,128}$/.test(options.headers['Idempotency-Key'])) return client.request(path, options);
     const url = new URL(path, 'http://inventory-context.invalid');
     const parameters = [...url.searchParams];
     const keys = parameters.map(([key]) => key);

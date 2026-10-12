@@ -53,3 +53,13 @@ test('reception scope distinguishes start/resume/read and denies compensation or
   const reader = suppliersContext({ ...client, current: () => ({ roles: ['CONSULTATION'] }) }, () => true, {});
   assert.equal(reader.canReadReception, false); await assert.rejects(reader.request(`/api/v1/sagas/${id}`));
 });
+test('only ADMIN/INVENTORY get the keyed exit write scope; other roles and stale contexts cannot write', async () => {
+  const options = { method: 'POST', headers: { 'Idempotency-Key': 'synthetic-key' }, body: '{}' };
+  const client = { current: () => ({ roles: ['INVENTORY'] }), request: path => Promise.resolve(path) };
+  const store = { pending: null }, writer = inventoryContext(client, () => true, store);
+  assert.equal(writer.canExit, true); assert.equal(writer.exits, store); await writer.request('/api/v1/exits', options);
+  await assert.rejects(writer.request('/api/v1/entries', options));
+  await assert.rejects(writer.request('/api/v1/exits', { ...options, headers: { Authorization: 'forged' } }));
+  for (const role of ['SUPERVISOR', 'CONSULTATION']) { const reader = inventoryContext({ ...client, current: () => ({ roles: [role] }) }, () => true); assert.equal(reader.canExit, false); await assert.rejects(reader.request('/api/v1/exits', options)); }
+  await assert.rejects(inventoryContext(client, () => false).request('/api/v1/exits', options));
+});
