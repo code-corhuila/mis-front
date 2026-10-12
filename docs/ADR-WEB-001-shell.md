@@ -43,3 +43,10 @@ the shell import map, rather than loading a second Angular core. If Catalog's
 runtime is absent, select the installed Inventory runtime. The Inventory context
 permits bounded stock reads, role-gated movements and two descriptive API reads;
 it does not expose stock writes or raw tokens. Owners still enforce authorization.
+
+Reception adds a distinct session-owned intention store and delegates orchestration
+to Workflow. Its capability permits human ADMIN/INVENTORY start/resume and
+ADMIN/INVENTORY/SUPERVISOR lookup; it exposes neither compensation nor direct
+receipt/entry writes. Pending/replay body/key is immutable, and resume is an explicit
+separate command. Completed/compensated may start a new intention; FAILED/unknown
+cannot be silently discarded. Session persistence and compensation UI remain absent.

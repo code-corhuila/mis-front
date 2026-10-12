@@ -5,13 +5,21 @@ export function catalogContext(client, active) {
     return client.request(path);
   } });
 }
-export function suppliersContext(client, active, registration) {
+export function suppliersContext(client, active, registration, reception = { pending: null }) {
   const canCreate = client.current()?.roles.includes('ADMIN') === true;
-  return Object.freeze({ canCreate, registration, request(path, options = {}) {
+  const roles = client.current()?.roles || [];
+  const canReceive = roles.some(role => ['ADMIN', 'INVENTORY'].includes(role));
+  const canReadReception = roles.some(role => ['ADMIN', 'INVENTORY', 'SUPERVISOR'].includes(role));
+  return Object.freeze({ canCreate, canReceive, canReadReception, registration, reception, request(path, options = {}) {
     if (!active() || !client.current()) return Promise.reject(Error('Inactive portal'));
     const read = /^\/api\/v1\/suppliers\?page=[1-9]\d*&limit=20$/.test(path) && Object.keys(options).length === 0;
     const write = canCreate && path === '/api/v1/suppliers' && options.method === 'POST' && typeof options.body === 'string' && options.body.length <= 65536 && Object.keys(options).sort().join() === 'body,headers,method' && Object.keys(options.headers || {}).join() === 'Idempotency-Key' && /^[A-Za-z0-9._:-]{8,128}$/.test(options.headers['Idempotency-Key']);
-    if (!read && !write) return Promise.reject(Error('Suppliers request outside contract'));
+    const sagaId = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+    const medicationRead = canReadReception && /^\/api\/v1\/medications\?page=[1-9]\d*&limit=20$/.test(path) && Object.keys(options).length === 0;
+    const sagaRead = canReadReception && new RegExp(`^/api/v1/sagas/${sagaId}$`).test(path) && Object.keys(options).length === 0;
+    const start = canReceive && path === '/api/v1/sagas/receive-supplies' && options.method === 'POST' && typeof options.body === 'string' && options.body.length <= 65536 && Object.keys(options).sort().join() === 'body,headers,method' && Object.keys(options.headers || {}).join() === 'Idempotency-Key' && /^[A-Za-z0-9._:-]{8,128}$/.test(options.headers['Idempotency-Key']);
+    const resume = canReceive && new RegExp(`^/api/v1/sagas/${sagaId}/resume$`).test(path) && options.method === 'POST' && options.body === '{}' && Object.keys(options).sort().join() === 'body,method';
+    if (!read && !write && !medicationRead && !sagaRead && !start && !resume) return Promise.reject(Error('Suppliers request outside contract'));
     return client.request(path, options);
   } });
 }

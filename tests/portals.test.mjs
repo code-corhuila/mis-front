@@ -39,3 +39,17 @@ test('suppliers context enforces path/role and keeps registration only within th
   await reader.request('/api/v1/suppliers?page=1&limit=20');
   await assert.rejects(suppliersContext(client, () => false, registration).request('/api/v1/suppliers?page=1&limit=20'));
 });
+test('reception scope distinguishes start/resume/read and denies compensation or reader writes', async () => {
+  const id = '11111111-1111-4111-8111-111111111111';
+  const client = { current: () => ({ roles: ['INVENTORY'] }), request: path => Promise.resolve(path) };
+  const context = suppliersContext(client, () => true, { pending: null }, { pending: null });
+  assert.equal(context.canReceive, true); await context.request('/api/v1/medications?page=1&limit=20');
+  await context.request('/api/v1/sagas/receive-supplies', { method: 'POST', headers: { 'Idempotency-Key': 'test-reception' }, body: '{}' });
+  await context.request(`/api/v1/sagas/${id}/resume`, { method: 'POST', body: '{}' });
+  await assert.rejects(context.request(`/api/v1/sagas/${id}/compensate`, { method: 'POST', body: '{}' }));
+  const supervisor = suppliersContext({ ...client, current: () => ({ roles: ['SUPERVISOR'] }) }, () => true, {});
+  assert.equal(supervisor.canReceive, false); await supervisor.request(`/api/v1/sagas/${id}`);
+  await assert.rejects(supervisor.request(`/api/v1/sagas/${id}/resume`, { method: 'POST', body: '{}' }));
+  const reader = suppliersContext({ ...client, current: () => ({ roles: ['CONSULTATION'] }) }, () => true, {});
+  assert.equal(reader.canReadReception, false); await assert.rejects(reader.request(`/api/v1/sagas/${id}`));
+});
