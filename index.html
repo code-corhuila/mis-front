@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MediStock</title><link rel="stylesheet" href="/src/style.css">
+<header><a href="/" class="brand">MediStock</a><span>Inventario de medicamentos</span><button id="logout" hidden>Cerrar sesi&#243;n</button></header>
+<main>
+  <section id="access" aria-labelledby="title">
+    <p class="eyebrow">ACCESO</p><h1 id="title">Iniciar sesi&#243;n</h1>
+    <form id="login">
+      <label for="username">Usuario</label><input id="username" name="username" autocomplete="username" maxlength="80" required autofocus>
+      <label for="password">Contrase&#241;a</label><input id="password" name="password" type="password" autocomplete="current-password" required>
+      <button id="submit" type="submit">Ingresar</button>
+    </form>
+  </section>
+  <section id="account" hidden aria-labelledby="account-title">
+    <p class="eyebrow">CUENTA</p><h1 id="account-title" tabindex="-1">Mi cuenta</h1>
+    <dl><dt>Nombre</dt><dd id="display-name"></dd><dt>Usuario</dt><dd id="account-name"></dd><dt>Roles</dt><dd id="roles"></dd></dl>
+  </section>
+  <p id="status" role="status" aria-live="polite"></p><p id="error" role="alert"></p>
+</main>
+<footer>Medicine Inventory System</footer>
+<script type="module" src="/src/app.js"></script>
+</html>
