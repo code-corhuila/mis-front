@@ -60,7 +60,19 @@ tokens. Pending body/version survives view changes, not login/logout/reload.
 The existing gateway already exposes ETag and permits If-Match. Both paired PRs
 must be applied before using the new maintenance screen.
 
-## Branching
+## Demo-inspired shell increment
+
+The user-provided mockup guides the desktop sidebar, workspace header, identity/role
+display, login brand and mobile section selector. Only implemented Catalog,
+Suppliers, Inventory and account views appear. Navigation uses the same portal
+capabilities/teardown; authentication and pending-write semantics remain unchanged.
+The reference PNG is reused unchanged; static Lucide icons retain their licenses.
+No demo credentials, fake metrics, reports, user management or injected scripts
+are copied. This is not a pixel-identical mockup or complete WEB-001 implementation.
+Portal-internal styling, real summary/alert screens, production packaging and QA
+remain subsequent work. See [acceptance](docs/WEB-001-demo-shell-acceptance.md).
+
+## Branching Policy
 
 Three permanent branches. **None of them accepts a direct commit** — you enter through a child
 branch and leave through a Pull Request.

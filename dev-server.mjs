@@ -3,6 +3,8 @@ import { readFile } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const files = new Map([['/', ['index.html', 'text/html']], ['/src/app.js', ['src/app.js', 'text/javascript']], ['/src/client.js', ['src/client.js', 'text/javascript']], ['/src/style.css', ['src/style.css', 'text/css']]]);
+files.set('/assets/medistock-demo.png', ['assets/medistock-demo.png', 'image/png']);
+for (const name of ['pill', 'truck', 'boxes', 'user-round', 'log-out']) files.set(`/assets/${name}.svg`, [`assets/${name}.svg`, 'image/svg+xml']);
 const port = Number(process.env.PORT || 5173);
 const gateway = new URL(process.env.GATEWAY_ORIGIN || 'http://localhost:8088');
 if (!['http:', 'https:'].includes(gateway.protocol) || gateway.username || gateway.password || gateway.pathname !== '/' || gateway.search || gateway.hash) throw Error('Invalid GATEWAY_ORIGIN');
@@ -49,6 +51,7 @@ const server = createServer(async (req, res) => {
   if (!file) { res.writeHead(404); res.end(); return; }
   try {
     res.setHeader('Content-Type', `${file[1]}; charset=utf-8`);
+    if (file[1].startsWith('image/')) { res.end(await readFile(new URL(file[0], import.meta.url))); return; }
     let content = await readFile(new URL(file[0], import.meta.url), 'utf8');
     if (file[0] === 'index.html') content = content.replace('<!--portal-imports-->', `<script type="importmap">${JSON.stringify({ imports })}</script>`);
     res.end(content);
