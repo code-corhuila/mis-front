@@ -58,3 +58,11 @@ remains revoked on navigation/logout. It exposes neither direct entries nor toke
 The store keeps an uncertain immutable body/key across view remounts, not across
 logout/reload. Only an acknowledged owner result triggers stock refresh; there is
 no optimistic debit or automatic retry. Owner authorization is still authoritative.
+
+Medication creation increment: extend only the Catalog context with keyed ADMIN
+POST /api/v1/medications and a separate session-owned registration store. Pending
+body/key/result survives view remounts, but is cleared on login/logout/reload.
+Requests reject extra options/headers and are revoked with the captured view.
+Only a validated acknowledgement refreshes owner listing; the UI never inserts an
+optimistic record. PUT and deactivation are still absent: future maintenance must
+carry the owner's If-Match version and explicitly handle conflicts.

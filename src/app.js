@@ -3,7 +3,7 @@ import { catalogContext, suppliersContext, inventoryContext } from './portals.js
 const $ = id => document.getElementById(id);
 const roleNames = { ADMIN: 'Administrador', INVENTORY: 'Inventario', SUPERVISOR: 'Supervisor', CONSULTATION: 'Consulta' };
 let client;
-let cleanup, portalGeneration = 0, selectedPortal = 'catalog', suppliersRegistration = { pending: null }, reception = { pending: null }, exits = { pending: null };
+let cleanup, portalGeneration = 0, selectedPortal = 'catalog', suppliersRegistration = { pending: null }, reception = { pending: null }, exits = { pending: null }, medicationRegistration = { pending: null };
 const portalDefinitions = { catalog: { url: '/catalog/src/portal.js', label: 'catalogo' }, suppliers: { url: '/suppliers/portal.js', label: 'proveedores' }, inventory: { url: '/inventory/src/portal.js', label: 'inventario' } };
 function markView(name) { for (const view of ['account', 'catalog', 'suppliers', 'inventory']) { if (view === name) $(`${view}-view`).setAttribute('aria-current', 'page'); else $(`${view}-view`).removeAttribute('aria-current'); } }
 function removePortal() { portalGeneration++; cleanup?.(); cleanup = null; $('portal-host').replaceChildren(); $('portal-area').hidden = true; document.querySelector('main').classList.remove('wide'); }
@@ -20,7 +20,7 @@ async function showPortal(name = selectedPortal) {
     if (version !== portalGeneration || !client.current()) return;
     const host = document.createElement('div'); $('portal-host').append(host);
     const active = () => version === portalGeneration;
-    const context = name === 'catalog' ? catalogContext(client, active) : name === 'inventory' ? inventoryContext(client, active, exits) : suppliersContext(client, active, suppliersRegistration, reception);
+    const context = name === 'catalog' ? catalogContext(client, active, medicationRegistration) : name === 'inventory' ? inventoryContext(client, active, exits) : suppliersContext(client, active, suppliersRegistration, reception);
     const destroy = await portal.mount(host, context);
     if (version !== portalGeneration || !client.current()) { destroy(); return; }
     cleanup = destroy;
@@ -31,6 +31,7 @@ function render(user) {
   suppliersRegistration = { pending: null };
   reception = { pending: null };
   exits = { pending: null };
+  medicationRegistration = { pending: null };
   removePortal(); $('views').hidden = !user;
   $('access').hidden = !!user; $('account').hidden = !user; $('logout').hidden = !user;
   $('display-name').textContent = user?.displayName || '';

@@ -26,7 +26,7 @@ SUPPLIERS_PORTAL_ROOT overrides its path; only dist/portal.js is served from it.
 Its context allows supplier listing and ADMIN registration with an idempotency key,
 never token access. Pending registration body/key survives view changes in memory,
 but is cleared on logout/login/reload; backend authorization remains authoritative.
-Catalog writes, production deployment and QA remain pending.
+Catalog editing/deactivation, production deployment and QA remain pending.
 Native Angular ESM/JIT is development integration, not AOT production packaging.
 
 Inventory now mounts the official sibling mis-inventory-portal reader; run its
@@ -36,18 +36,23 @@ CONSULTATION cannot request movements. Angular runtime modules are shared from
 Catalog, with Inventory's locked runtime as fallback when Catalog is not installed.
 The server serves only allowed source/runtime files, never arbitrary checkout files.
 An explicit ADMIN/INVENTORY capability also permits keyed POST /api/v1/exits.
-Catalog writes, production packaging and QA still remain.
+Catalog editing/deactivation, production packaging and QA still remain.
 
 The paired Suppliers reception increment adds ADMIN/INVENTORY start/resume and
 ADMIN/INVENTORY/SUPERVISOR saga lookup, with a separate session-owned pending
 body/key/result store. The scope denies compensation and arbitrary Workflow paths.
 Reception uses real Workflow, not frontend orchestration or direct participant writes.
 Unknown starts retain their original intent; logout/reload discards local memory.
-Single-lot reception and stock exits are now available. Catalog writes,
+Single-lot reception and stock exits are now available. Catalog editing/deactivation,
 visual adaptation to the mockup, production packaging and QA still remain.
 Exit intent uses a separate session-owned body/key/result store; navigation retains
 it, while logout/login/reload clears it. No optimistic debit or automatic retry
 is used. Inventory enforces permissions and stock availability independently.
+Catalog also permits keyed ADMIN medication creation, with a separate session-owned
+pending body/key/result store. Other roles keep read-only access; arbitrary writes,
+extra headers and stale views are denied. Creation survives navigation, not logout
+or reload. Catalog enforces code uniqueness and permissions; no database access or
+token handoff is introduced. The portal's creation acceptance is operator-run.
 
 ## Branching
 
