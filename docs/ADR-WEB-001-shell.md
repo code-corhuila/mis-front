@@ -75,3 +75,11 @@ store retains an uncertain command's body/version through view remounts. A 412
 never adopts a fresh ETag automatically: explicit review reads current state and
 discards the old draft before a new command. This cannot attribute a concurrent
 change to the previous request. Backend row/version checks remain authoritative.
+
+Overview increment: the framework-neutral shell composes existing public read APIs
+through a separate bounded capability. It shows owner metadata totals, not page
+length or summed units across different medications. Expired rows use Inventory's
+expired=true filter; no browser/worker alert persistence is inferred. Movements
+are not requested for CONSULTATION. Partial failures remain unavailable, not zero;
+independent owner queries are not an atomic cross-domain snapshot. Late/disposed
+responses cannot publish after navigation/logout. No writes or raw token handoff.

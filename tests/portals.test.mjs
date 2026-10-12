@@ -1,6 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { catalogContext, suppliersContext, inventoryContext } from '../src/portals.js';
+import { catalogContext, suppliersContext, inventoryContext, overviewContext } from '../src/portals.js';
+test('overview exposes bounded reads only and never consultation movements or stale contexts', async () => {
+  const client = { current: () => ({ roles: ['CONSULTATION'] }), request: path => Promise.resolve(path) };
+  const reader = overviewContext(client, () => true); assert.equal(reader.canMovements, false);
+  await reader.request('/api/v1/stock?page=2&limit=20&expired=true'); await reader.request('/api/v1/suppliers?page=1&limit=1');
+  await assert.rejects(reader.request('/api/v1/movements?page=1&limit=5')); await assert.rejects(reader.request('/api/v1/stock?page=1&limit=1', { method: 'POST' }));
+  await assert.rejects(reader.request('/api/v1/stock?page=2&limit=1')); await assert.rejects(reader.request('/api/v1/stock?page=1&limit=20&expired=true&expired=false'));
+  await assert.rejects(overviewContext(client, () => false).request('/api/v1/medications?page=1&limit=1'));
+  for (const role of ['ADMIN', 'INVENTORY', 'SUPERVISOR']) await overviewContext({ ...client, current: () => ({ roles: [role] }) }, () => true).request('/api/v1/movements?page=1&limit=5');
+});
 test('portal only gets authenticated catalog reads, never a raw token', async () => {
   const client = { current: () => ({ username: 'fixture' }), request: path => Promise.resolve(path) };
   const context = catalogContext(client, () => true);
