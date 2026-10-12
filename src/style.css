@@ -21,4 +21,9 @@ dd { margin: 6px 0 0; font-size: 17px; overflow-wrap: anywhere; }
 #status { color: #536770; line-height: 1.5; }
 footer { margin-top: auto; padding: 24px; text-align: center; font-size: 12px; color: #536770; }
 [hidden] { display: none !important; }
+main.wide { width: min(100% - 40px, 1160px); margin-top: 36px; }
+#views { display: flex; gap: 24px; padding: 0 32px; background: white; border-bottom: 1px solid #d8e1e4; }
+#views button { width: auto; border-radius: 0; background: none; color: #536770; border-bottom: 3px solid transparent; padding: 14px 0; }
+#views button[aria-current] { color: #0d655b; border-color: #0d655b; }
+#portal-retry { width: auto; }
 @media (max-width: 480px) { header { padding: 16px 20px; gap: 10px; } header span { width: 100%; } main { margin-top: 44px; } }

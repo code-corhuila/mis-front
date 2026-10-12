@@ -2,7 +2,9 @@
 <html lang="es">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MediStock</title><link rel="stylesheet" href="/src/style.css">
+<!--portal-imports-->
 <header><a href="/" class="brand">MediStock</a><span>Inventario de medicamentos</span><button id="logout" hidden>Cerrar sesi&#243;n</button></header>
+<nav id="views" hidden aria-label="Secciones"><button id="catalog-view">Cat&#225;logo</button><button id="account-view" aria-current="page">Mi cuenta</button></nav>
 <main>
   <section id="access" aria-labelledby="title">
     <p class="eyebrow">ACCESO</p><h1 id="title">Iniciar sesi&#243;n</h1>
@@ -12,6 +14,7 @@
       <button id="submit" type="submit">Ingresar</button>
     </form>
   </section>
+  <section id="portal-area" hidden><p id="portal-status" role="status"></p><p id="portal-error" role="alert"></p><button id="portal-retry" hidden>Reintentar</button><div id="portal-host"></div></section>
   <section id="account" hidden aria-labelledby="account-title">
     <p class="eyebrow">CUENTA</p><h1 id="account-title" tabindex="-1">Mi cuenta</h1>
     <dl><dt>Nombre</dt><dd id="display-name"></dd><dt>Usuario</dt><dd id="account-name"></dd><dt>Roles</dt><dd id="roles"></dd></dl>
